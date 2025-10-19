@@ -2,39 +2,38 @@
     <div>
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h4 mb-0">Supervisor Processes</h1>
-            <div class="d-flex" v-if="processes.length > 0">
-                <button @click="startAllProcesses" class="btn btn-sm btn-success me-2" :disabled="isBusy">
-                    Start All
-                </button>
-                <button @click="stopAllProcesses" class="btn btn-sm btn-warning me-2" :disabled="isBusy">
-                    Stop All
-                </button>
-                <button @click="restartAllProcesses" class="btn btn-sm btn-danger" :disabled="isBusy">
-                    Restart All
-                </button>
-            </div>
         </div>
 
-        <div class="card">
+        <div v-for="(groupProcesses, groupName) in groupedProcesses" :key="groupName" class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0 font-weight-bold">{{ groupName }}</h2>
+                <div class="d-flex">
+                    <button @click="startGroup(groupName)" class="btn btn-sm btn-success me-2" :disabled="isBusy">
+                        Start Group
+                    </button>
+                    <button @click="stopGroup(groupName)" class="btn btn-sm btn-warning me-2" :disabled="isBusy">
+                        Stop Group
+                    </button>
+                    <button @click="restartGroup(groupName)" class="btn btn-sm btn-danger" :disabled="isBusy">
+                        Restart Group
+                    </button>
+                </div>
+            </div>
+
             <div class="card-body p-0">
                 <table class="table table-hover mb-0">
                     <thead>
                     <tr>
-                        <th scope="col">Name</th>
-                        <th scope="col">Group</th>
-                        <th scope="col">State</th>
-                        <th scope="col">PID</th>
-                        <th scope="col">Description</th>
-                        <th scope="col" class="text-end">Actions</th>
+                        <th scope="col" style="width: 30%;">Name</th>
+                        <th scope="col" style="width: 15%;">State</th>
+                        <th scope="col" style="width: 10%;">PID</th>
+                        <th scope="col" style="width: 25%;">Description</th>
+                        <th scope="col" class="text-end" style="width: 20%;">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-if="!processes.length">
-                        <td colspan="6" class="text-center">No processes found.</td>
-                    </tr>
-                    <tr v-for="process in processes" :key="process.name">
+                    <tr v-for="process in groupProcesses" :key="process.name">
                         <td>{{ process.name }}</td>
-                        <td>{{ process.group }}</td>
                         <td>
                                 <span class="badge" :class="{
                                     'bg-success': process.state === 'RUNNING',
@@ -67,6 +66,12 @@
                 </table>
             </div>
         </div>
+
+        <div v-if="!processes.length && !isBusy" class="card">
+            <div class="card-body text-center">
+                No processes found.
+            </div>
+        </div>
     </div>
 </template>
 
@@ -81,12 +86,26 @@ export default {
         };
     },
 
+    computed: {
+        groupedProcesses() {
+            return this.processes.reduce((groups, process) => {
+                const groupName = process.group;
+                if (!groups[groupName]) {
+                    groups[groupName] = [];
+                }
+                groups[groupName].push(process);
+                return groups;
+            }, {});
+        }
+    },
+
     mounted() {
         this.fetch();
     },
 
     methods: {
         fetch() {
+            this.isBusy = true;
             axios.get('/supervisor/processes')
                 .then(response => {
                     this.processes = response.data;
@@ -94,6 +113,9 @@ export default {
                 .catch(error => {
                     console.error('Error fetching processes:', error);
                     alert('Could not fetch process data. Check the connection to Supervisor.');
+                })
+                .finally(() => {
+                    this.isBusy = false;
                 });
         },
 
@@ -101,7 +123,9 @@ export default {
             if (!confirm(confirmMessage)) {
                 return;
             }
+
             this.isBusy = true;
+
             axios.post(url, payload)
                 .then(response => {
                     console.log(response.data.message);
@@ -111,9 +135,7 @@ export default {
                     const errorMessage = error.response?.data?.message || error.message;
                     console.error('An error occurred:', errorMessage);
                     alert(`Action failed: ${errorMessage}`);
-                })
-                .finally(() => {
-                    setTimeout(() => this.isBusy = false, 700);
+                    this.isBusy = false;
                 });
         },
 
@@ -139,14 +161,26 @@ export default {
             );
         },
 
-        startAllProcesses() {
-            this.performAction('/supervisor/action/start-all', {}, 'Are you sure you want to start ALL processes?');
+        startGroup(groupName) {
+            this.performAction(
+                '/supervisor/group/start',
+                { group_name: groupName },
+                `Are you sure you want to start all processes in the group "${groupName}"?`
+            );
         },
-        stopAllProcesses() {
-            this.performAction('/supervisor/action/stop-all', {}, 'Are you sure you want to stop ALL processes?');
+        stopGroup(groupName) {
+            this.performAction(
+                '/supervisor/group/stop',
+                { group_name: groupName },
+                `Are you sure you want to stop all processes in the group "${groupName}"?`
+            );
         },
-        restartAllProcesses() {
-            this.performAction('/supervisor/action/restart-all', {}, 'Are you sure you want to restart ALL processes?');
+        restartGroup(groupName) {
+            this.performAction(
+                '/supervisor/group/restart',
+                { group_name: groupName },
+                `Are you sure you want to restart all processes in the group "${groupName}"?`
+            );
         },
     },
 };
