@@ -1,34 +1,41 @@
 <template>
     <div>
-        <heading class="mb-6">Processes</heading>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h4 mb-0">Supervisor Processes</h1>
+        </div>
 
-        <card class="overflow-hidden">
-            <table class="w-full table-auto">
-                <thead>
-                <tr class="bg-gray-100 text-left text-xs uppercase tracking-wide">
-                    <th class="px-6 py-3">Name</th>
-                    <th class="px-6 py-3">Group</th>
-                    <th class="px-6 py-3">State</th>
-                    <th class="px-6 py-3">PID</th>
-                    <th class="px-6 py-3">Uptime</th>
-                    <th class="px-6 py-3">Description</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="process in processes" :key="process.name" class="border-t">
-                    <td class="px-6 py-4">{{ process.name }}</td>
-                    <td class="px-6 py-4">{{ process.group }}</td>
-                    <td class="px-6 py-4" :class="{
-                            'text-green-600 font-semibold': process.state === 'RUNNING',
-                            'text-red-600 font-semibold': process.state !== 'RUNNING'
-                        }">{{ process.state }}</td>
-                    <td class="px-6 py-4">{{ process.pid }}</td>
-                    <td class="px-6 py-4">{{ formatUptime(process.uptime) }}</td>
-                    <td class="px-6 py-4 text-sm text-gray-600">{{ process.description }}</td>
-                </tr>
-                </tbody>
-            </table>
-        </card>
+        <div class="card">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Group</th>
+                        <th scope="col">State</th>
+                        <th scope="col">PID</th>
+                        <th scope="col">Description</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-if="!processes.length">
+                        <td colspan="5" class="text-center">No processes found.</td>
+                    </tr>
+                    <tr v-for="process in processes" :key="process.name">
+                        <td>{{ process.name }}</td>
+                        <td>{{ process.group }}</td>
+                        <td>
+                                <span class="badge" :class="{
+                                    'bg-success': process.state === 'RUNNING',
+                                    'bg-danger': process.state !== 'RUNNING'
+                                }">{{ process.state }}</span>
+                        </td>
+                        <td>{{ process.pid }}</td>
+                        <td class="text-muted">{{ process.description }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -55,23 +62,6 @@ export default {
                 .catch(error => {
                     console.error('Error fetching processes:', error);
                 });
-        },
-
-        formatUptime(seconds) {
-            if (seconds === 0) return '0:00:00';
-
-            const days = Math.floor(seconds / 86400);
-            seconds %= 86400;
-            const hours = Math.floor(seconds / 3600);
-            seconds %= 3600;
-            const minutes = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-
-            let str = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            if (days > 0) {
-                return `${days} day${days > 1 ? 's' : ''}, ${str}`;
-            }
-            return str;
         },
     },
 };
