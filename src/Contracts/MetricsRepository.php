@@ -97,6 +97,22 @@ interface MetricsRepository
     public function incrementQueue($queue, $runtime);
 
     /**
+     * Increment the failed metrics information for a job.
+     *
+     * @param  string  $job
+     * @return void
+     */
+    public function incrementFailedJob($job);
+
+    /**
+     * Increment the failed metrics information for a queue.
+     *
+     * @param  string  $queue
+     * @return void
+     */
+    public function incrementFailedQueue($queue);
+
+    /**
      * Get all of the snapshots for the given job.
      *
      * @param  string  $job
