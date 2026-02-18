@@ -42,9 +42,15 @@
 
                         this.rawData = response.data;
 
-                        this.metric.throughPutChart = this.buildChartData(data, 'throughput', 'Times');
+                        this.metric.throughPutChart = this.buildChartData(data, 'throughput', 'Times', '#7746ec');
 
-                        this.metric.runTimeChart = this.buildChartData(data, 'runtime', 'Seconds');
+                        this.metric.runTimeChart = this.buildChartData(data, 'runtime', 'Seconds', '#3182ce');
+
+                        this.metric.failedChart = this.buildChartData(data, 'failed', 'Times', '#e53e3e');
+
+                        if (this.$route.params.type == 'queues') {
+                            this.metric.pendingChart = this.buildChartData(data, 'pending', 'Jobs', '#ed8936');
+                        }
 
                         this.ready = true;
                     });
@@ -59,17 +65,19 @@
                     ...value,
                     time: this.formatDate(value.time).format("MMM-D hh:mmA"),
                 })), 'time')).map(value => value.reduce((sum, value) => ({
-                    runtime: parseFloat(sum.runtime) + parseFloat(value.runtime),
-                    throughput: parseInt(sum.throughput) + parseInt(value.throughput),
+                    runtime: parseFloat(sum.runtime || 0) + parseFloat(value.runtime || 0),
+                    throughput: parseInt(sum.throughput || 0) + parseInt(value.throughput || 0),
+                    failed: parseInt(sum.failed || 0) + parseInt(value.failed || 0),
+                    pending: parseInt(sum.pending || 0) + parseInt(value.pending || 0),
                     time: value.time
-                })))
+                }), {}))
             },
 
 
             /**
              * Build the given chart data.
              */
-            buildChartData(data, attribute, label) {
+            buildChartData(data, attribute, label, color) {
                 return {
                     labels: data.map(entry => entry.time),
                     datasets: [
@@ -79,8 +87,8 @@
                             lineTension: 0,
                             backgroundColor: 'transparent',
                             pointBackgroundColor: '#fff',
-                            pointBorderColor: '#7746ec',
-                            borderColor: '#7746ec',
+                            pointBorderColor: color,
+                            borderColor: color,
                             borderWidth: 2,
                         },
                     ],
@@ -133,6 +141,50 @@
                 </p>
 
                 <line-chart v-if="ready && rawData.length" :data="metric.runTimeChart"/>
+            </div>
+        </div>
+
+        <div class="card overflow-hidden mt-4">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h2 class="h6 m-0">Failed - {{$route.params.slug}}</h2>
+            </div>
+
+            <div v-if="!ready" class="d-flex align-items-center justify-content-center card-bg-secondary p-5 bottom-radius">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="icon spin me-2 fill-text-color">
+                    <path d="M12 10a2 2 0 0 1-3.41 1.41A2 2 0 0 1 10 8V0a9.97 9.97 0 0 1 10 10h-8zm7.9 1.41A10 10 0 1 1 8.59.1v2.03a8 8 0 1 0 9.29 9.29h2.02zm-4.07 0a6 6 0 1 1-7.25-7.25v2.1a3.99 3.99 0 0 0-1.4 6.57 4 4 0 0 0 6.56-1.42h2.1z"></path>
+                </svg>
+
+                <span>Loading...</span>
+            </div>
+
+            <div class="card-body card-bg-secondary" v-if="ready">
+                <p class="text-center m-0 p-5" v-if="ready && !rawData.length">
+                    Not Enough Data
+                </p>
+
+                <line-chart v-if="ready && rawData.length" :data="metric.failedChart"/>
+            </div>
+        </div>
+
+        <div class="card overflow-hidden mt-4" v-if="ready && $route.params.type == 'queues'">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h2 class="h6 m-0">Pending - {{$route.params.slug}}</h2>
+            </div>
+
+            <div v-if="!ready" class="d-flex align-items-center justify-content-center card-bg-secondary p-5 bottom-radius">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" class="icon spin me-2 fill-text-color">
+                    <path d="M12 10a2 2 0 0 1-3.41 1.41A2 2 0 0 1 10 8V0a9.97 9.97 0 0 1 10 10h-8zm7.9 1.41A10 10 0 1 1 8.59.1v2.03a8 8 0 1 0 9.29 9.29h2.02zm-4.07 0a6 6 0 1 1-7.25-7.25v2.1a3.99 3.99 0 0 0-1.4 6.57 4 4 0 0 0 6.56-1.42h2.1z"></path>
+                </svg>
+
+                <span>Loading...</span>
+            </div>
+
+            <div class="card-body card-bg-secondary" v-if="ready">
+                <p class="text-center m-0 p-5" v-if="ready && !rawData.length">
+                    Not Enough Data
+                </p>
+
+                <line-chart v-if="ready && rawData.length" :data="metric.pendingChart"/>
             </div>
         </div>
     </div>
