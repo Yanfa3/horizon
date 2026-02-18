@@ -48,6 +48,8 @@ class QueueMetricsController extends Controller
             ->map(function ($record) {
                 $record->runtime = round($record->runtime / 1000, 3);
                 $record->throughput = (int) $record->throughput;
+                $record->failed = (int) ($record->failed ?? 0);
+                $record->pending = (int) ($record->pending ?? 0);
 
                 return $record;
             });
