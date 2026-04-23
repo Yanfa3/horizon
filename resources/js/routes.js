@@ -12,6 +12,7 @@ import failedJobs from './screens/failedJobs/index.vue';
 import failedJobsJob from './screens/failedJobs/job.vue';
 import batches from './screens/batches/index.vue';
 import batchesPreview from './screens/batches/preview.vue';
+import redisIndex from './screens/redis/index.vue';
 import SupervisorIndex from './screens/supervisor/index.vue';
 
 export default [
@@ -124,5 +125,11 @@ export default [
                 component: batchesPreview,
             },
         ],
+    },
+
+    {
+        path: '/redis',
+        name: 'redis',
+        component: redisIndex,
     },
 ];
