@@ -69,8 +69,26 @@ return [
 
     'prefix' => env(
         'HORIZON_PREFIX',
-        Str::slug(env('APP_NAME', 'laravel'), '_').'_horizon:'
+        Str::slug(env('APP_NAME', 'laravel'), '_') . '_horizon:'
     ),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Horizon Failed Jobs Driver
+    |--------------------------------------------------------------------------
+    |
+    | This option allows you to configure which driver will be used to store
+    | and retrieve failed jobs. By default, Horizon uses Redis, but you
+    | may also use the database if you prefer to keep them there.
+    |
+    | Supported: "redis", "database"
+    |
+    */
+
+    'failed_jobs' => [
+        'driver' => env('HORIZON_FAILED_JOBS_DRIVER', 'redis'),
+    ],
+
 
     /*
     |--------------------------------------------------------------------------

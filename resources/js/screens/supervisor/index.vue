@@ -2,6 +2,17 @@
     <div>
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h4 mb-0">Supervisor Processes</h1>
+            <div class="d-flex gap-2">
+                <button @click="startAll" class="btn btn-sm btn-success" :disabled="isBusy">
+                    Start All
+                </button>
+                <button @click="stopAll" class="btn btn-sm btn-warning" :disabled="isBusy">
+                    Stop All
+                </button>
+                <button @click="restartAll" class="btn btn-sm btn-danger" :disabled="isBusy">
+                    Restart All
+                </button>
+            </div>
         </div>
 
         <div v-for="(groupProcesses, groupName) in groupedProcesses" :key="groupName" class="card mb-4">
@@ -180,6 +191,28 @@ export default {
                 '/supervisor/group/restart',
                 { group_name: groupName },
                 `Are you sure you want to restart all processes in the group "${groupName}"?`
+            );
+        },
+
+        startAll() {
+            this.performAction(
+                '/supervisor/all/start',
+                {},
+                'Are you sure you want to start ALL supervisor processes?'
+            );
+        },
+        stopAll() {
+            this.performAction(
+                '/supervisor/all/stop',
+                {},
+                'Are you sure you want to stop ALL supervisor processes?'
+            );
+        },
+        restartAll() {
+            this.performAction(
+                '/supervisor/all/restart',
+                {},
+                'Are you sure you want to restart ALL supervisor processes? This will briefly interrupt all queues.'
             );
         },
     },

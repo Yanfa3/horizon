@@ -41,7 +41,13 @@ Route::prefix('api')->group(function () {
     Route::get('/jobs/failed/{id}', 'FailedJobsController@show')->name('horizon.failed-jobs.show');
     Route::post('/jobs/retry/{id}', 'RetryController@store')->name('horizon.retry-jobs.show');
     Route::get('/jobs/{id}', 'JobsController@show')->name('horizon.jobs.show');
-});
+    // Redis Routes...
+    Route::get('/redis', 'RedisController@index')->name('horizon.redis.index');
+    Route::get('/redis/{key}', 'RedisController@show')->name('horizon.redis.show')
+        ->where('key', '.*');
+    Route::delete('/redis/{key}', 'RedisController@destroy')->name('horizon.redis.destroy')
+        ->where('key', '.*');
 
+});
 // Catch-all Route...
 Route::get('/{view?}', 'HomeController@index')->where('view', '(.*)')->name('horizon.index');

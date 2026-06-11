@@ -210,6 +210,30 @@ class RedisMetricsRepository implements MetricsRepository
     }
 
     /**
+     * Increment the failed metrics information for a job.
+     *
+     * @param  string  $job
+     * @return void
+     */
+    public function incrementFailedJob($job)
+    {
+        $this->connection()->hincrby('job:'.$job, 'failed', 1);
+        $this->connection()->sadd('measured_jobs', 'job:'.$job);
+    }
+
+    /**
+     * Increment the failed metrics information for a queue.
+     *
+     * @param  string  $queue
+     * @return void
+     */
+    public function incrementFailedQueue($queue)
+    {
+        $this->connection()->hincrby('queue:'.$queue, 'failed', 1);
+        $this->connection()->sadd('measured_queues', 'queue:'.$queue);
+    }
+
+    /**
      * Get all of the snapshots for the given job.
      *
      * @param  string  $job
@@ -277,6 +301,7 @@ class RedisMetricsRepository implements MetricsRepository
             'snapshot:'.$key, $time = CarbonImmutable::now()->getTimestamp(), json_encode([
                 'throughput' => $data['throughput'],
                 'runtime' => $data['runtime'],
+                'failed' => $data['failed'],
                 'time' => $time,
             ])
         );
@@ -300,6 +325,8 @@ class RedisMetricsRepository implements MetricsRepository
             'snapshot:'.$key, $time = CarbonImmutable::now()->getTimestamp(), json_encode([
                 'throughput' => $data['throughput'],
                 'runtime' => $data['runtime'],
+                'failed' => $data['failed'],
+                'pending' => \Illuminate\Support\Facades\Queue::size($queue),
                 'wait' => app(WaitTimeCalculator::class)->calculateFor($queue),
                 'time' => $time,
             ])
@@ -319,7 +346,7 @@ class RedisMetricsRepository implements MetricsRepository
     protected function baseSnapshotData($key)
     {
         $responses = $this->connection()->transaction(function ($trans) use ($key) {
-            $trans->hmget($key, ['throughput', 'runtime']);
+            $trans->hmget($key, ['throughput', 'runtime', 'failed']);
 
             $trans->del($key);
         });
@@ -327,8 +354,9 @@ class RedisMetricsRepository implements MetricsRepository
         $snapshot = array_values($responses[0]);
 
         return [
-            'throughput' => $snapshot[0],
-            'runtime' => $snapshot[1],
+            'throughput' => $snapshot[0] ?: 0,
+            'runtime' => $snapshot[1] ?: 0,
+            'failed' => $snapshot[2] ?: 0,
         ];
     }
 
